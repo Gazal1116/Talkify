@@ -1,6 +1,6 @@
 const WebSocket = require("ws");
 
-const wss = new WebSocket.Server({ port: 5000 });
+const wss = new WebSocket.Server({ port: 8000 });
 
 const rooms = {};
 const roomSessions = {}; // Track unique sessions for each room code
@@ -90,4 +90,4 @@ wss.on("connection", (ws) => {
 
 });
 
-console.log("Server running on port 5000");
+console.log("Server running on port 8000");

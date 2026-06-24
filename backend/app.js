@@ -1,15 +1,16 @@
 const WebSocket = require("ws");
 
-const wss = new WebSocket.Server({ port: 5000 });
+const PORT = process.env.PORT || 8000;
+
+const wss = new WebSocket.Server({ port: PORT });
 
 const rooms = {};
-const roomSessions = {}; // Track unique sessions for each room code
+const roomSessions = {};
 
 wss.on("connection", (ws) => {
   console.log("✓ Client connected");
 
   ws.on("message", (message) => {
-
     const data = JSON.parse(message);
 
     // JOIN ROOM
@@ -18,21 +19,22 @@ wss.on("connection", (ws) => {
 
       ws.username = data.username;
       ws.room = data.room;
-      
-      // Priority: 1) existing session for room, 2) provided sessionId, 3) create new
-      let sessionId = roomSessions[data.room] || (data.sessionId && data.sessionId !== "existing" ? data.sessionId : null);
-      
-      // If no session exists for this room yet, create a new one
+
+      let sessionId =
+        roomSessions[data.room] ||
+        (data.sessionId && data.sessionId !== "existing"
+          ? data.sessionId
+          : null);
+
       if (!sessionId) {
-        sessionId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        sessionId = `${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(2, 9)}`;
       }
-      
-      // Always update/store the session for this room
+
       roomSessions[data.room] = sessionId;
-      
       ws.sessionId = sessionId;
 
-      // Create unique room key combining code and session
       const roomKey = `${data.room}_${sessionId}`;
 
       if (!rooms[roomKey]) {
@@ -40,25 +42,35 @@ wss.on("connection", (ws) => {
       }
 
       rooms[roomKey].push(ws);
-      console.log(`✓ Room "${roomKey}" now has ${rooms[roomKey].length} user(s)`);
 
-        // Broadcast updated user list to the room
-        const users = rooms[roomKey].map((client) => client.username).filter(Boolean);
-        rooms[roomKey].forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: "userlist", users }));
-          }
-        });
+      console.log(
+        `✓ Room "${roomKey}" now has ${rooms[roomKey].length} user(s)`
+      );
+
+      const users = rooms[roomKey]
+        .map((client) => client.username)
+        .filter(Boolean);
+
+      rooms[roomKey].forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "userlist",
+              users,
+            })
+          );
+        }
+      });
 
       return;
     }
 
     // SEND MESSAGE
     if (data.type === "message") {
-      console.log(`✓ Message from "${data.username}": ${data.text.substring(0, 50)}`);
+      console.log(
+        `✓ Message from "${data.username}": ${data.text.substring(0, 50)}`
+      );
 
-      // Use the actual session ID from the client connection, not the one they send
-      // This ensures messages are sent to the correct room session
       const roomKey = `${data.room}_${ws.sessionId}`;
       const roomUsers = rooms[roomKey];
 
@@ -68,64 +80,59 @@ wss.on("connection", (ws) => {
       }
 
       roomUsers.forEach((client) => {
-
         if (client.readyState === WebSocket.OPEN) {
-
           client.send(
             JSON.stringify({
               username: data.username,
               text: data.text,
             })
           );
-
         }
-
       });
-
     }
-
   });
 
   ws.on("error", (error) => {
     console.log(`✗ WebSocket error: ${error.message}`);
   });
 
-  // disconnect
   ws.on("close", () => {
-    console.log(`✓ Client disconnected`);
+    console.log("✓ Client disconnected");
 
     if (ws.room && ws.sessionId) {
-
       const roomKey = `${ws.room}_${ws.sessionId}`;
 
       if (rooms[roomKey]) {
-
         rooms[roomKey] = rooms[roomKey].filter(
           (client) => client !== ws
         );
 
-        console.log(`✓ Room "${roomKey}" now has ${rooms[roomKey].length} user(s)`);
+        console.log(
+          `✓ Room "${roomKey}" now has ${rooms[roomKey].length} user(s)`
+        );
 
-        // Broadcast updated user list after someone leaves
-        if (rooms[roomKey] && rooms[roomKey].length > 0) {
-          const users = rooms[roomKey].map((client) => client.username).filter(Boolean);
+        if (rooms[roomKey].length > 0) {
+          const users = rooms[roomKey]
+            .map((client) => client.username)
+            .filter(Boolean);
+
           rooms[roomKey].forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({ type: "userlist", users }));
+              client.send(
+                JSON.stringify({
+                  type: "userlist",
+                  users,
+                })
+              );
             }
           });
-        } else if (rooms[roomKey] && rooms[roomKey].length === 0) {
-          // Clean up empty rooms
+        } else {
           delete rooms[roomKey];
           console.log(`✓ Empty room "${roomKey}" deleted`);
         }
-
       }
-
     }
-
   });
-
 });
 
-console.log("✓ Server running on port 5000");
+console.log(`✓ WebSocket server running on port ${PORT}`);

@@ -17,7 +17,7 @@ function Chat() {
   // CONNECT WEBSOCKET
   useEffect(() => {
 
-    ws.current = new WebSocket("ws://localhost:5000");
+    ws.current = new WebSocket("ws://localhost:8000");
 
     ws.current.onopen = () => {
       console.log("✓ WebSocket connected");

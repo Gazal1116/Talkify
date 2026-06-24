@@ -10,7 +10,7 @@ function App() {
   const hasSentUsername = useRef(false);
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:5000");
+    ws.current = new WebSocket("ws://localhost:8000");
 
     ws.current.onmessage = (event) => {
       setMessages((prev) => [...prev, event.data]);

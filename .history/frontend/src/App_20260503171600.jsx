@@ -22,7 +22,7 @@ function App() {
   };
 
   const connectSocket = () => {
-    const socket = new WebSocket("ws://localhost:5000");
+    const socket = new WebSocket("ws://localhost:8000");
     ws.current = socket;
     setStatus("Connecting...");
 

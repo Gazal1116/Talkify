@@ -28,6 +28,6 @@ ws.on("message", (message) => {
     ws.send("Message received by server");
 });
 // 6. start server
-server.listen(5000, () => {
-    console.log("Server started on port 5000");
+server.listen(8000, () => {
+    console.log("Server started on port 8000");
 });

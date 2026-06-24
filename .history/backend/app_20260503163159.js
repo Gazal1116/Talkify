@@ -59,6 +59,6 @@ if (ws.username === "") {
 });
 
 // start server
-server.listen(5000, () => {
-    console.log("Server started on port 5000");
+server.listen(8000, () => {
+    console.log("Server started on port 8000");
 });

@@ -9,7 +9,7 @@ function App() {
 
   // connect to backend
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:5000");
+    ws.current = new WebSocket("ws://localhost:8000");
 
     ws.current.onmessage = (event) => {
       setMessages((prev) => [...prev, event.data]);
